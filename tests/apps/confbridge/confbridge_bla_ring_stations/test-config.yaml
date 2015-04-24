@@ -1,0 +1,105 @@
+testinfo:
+    summary: 'Test stations ringing when a trunk dials in'
+    description: |
+        This tests the behavior of ConfBridge BLA when a call comes in on one
+        of the trunks. 
+
+properties:
+    minversion: '10.0.0'
+    tags:
+        - BLA
+        - confbridge
+        - apps
+#    dependencies:
+#        - buildoption: 'TEST_FRAMEWORK'
+#        - python : 'twisted'
+#        - python : 'starpy'
+#        - asterisk : 'app_confbridge'
+#        - asterisk : 'app_senddtmf'
+#        - asterisk : 'app_playback'
+#        - asterisk : 'chan_sip'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ConfBridge'
+  scenarios:
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'BLARinging'
+              Trunk: 'line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA Trunk line1 Ringing'
+      channels:
+        -
+          channel-id: 'Incoming'
+          channel-name: 'Local/incoming@BLA'
+          context: 'line1'
+          exten: 'inbound'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/incoming@BLA'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Incoming Join Event received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'Marked'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/incoming@BLA'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Incoming Leave Event received'
+        -
+          channel-id: 'Station'
+          channel-name: 'Local/station1@BLA'
+          context: 'bla_stations'
+          exten: 'station1'
+#          start-on-create: False
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newstate'
+                  Channel: 'Local/station1@BLA'
+                  ChannelStateDesc: 'Ringing'
+            - type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BLARinging'
+                  Trunk: 'line1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'WaitMarked-1 Join Event received'
