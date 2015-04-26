@@ -7,7 +7,7 @@ global-settings:
     # The active test configuration.  The value must match a subsequent key
     # in this file, which defines the global settings to apply to the test execution
     # run.
-    test-configuration: config-standard
+    test-configuration: config-specific-version
 
     # The following sequence defines for any test configuration the available pre-
     # and post-test conditions.  The 'name' field specifies how the test configurations
@@ -110,5 +110,5 @@ config-specific-version:
         # Override the version of Asterisk under test to the specified version.
         # This is particularly useful if the version under test is from a team
         # branch not based on Asterisk trunk.
-        forced-version: 1.8.0.0
+        forced-version: 15.0.0
 

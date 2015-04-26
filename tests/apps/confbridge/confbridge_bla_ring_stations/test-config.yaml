@@ -5,18 +5,18 @@ testinfo:
         of the trunks. 
 
 properties:
-    minversion: '10.0.0'
+    minversion: '14.0.0'
     tags:
         - BLA
         - confbridge
         - apps
-#    dependencies:
-#        - buildoption: 'TEST_FRAMEWORK'
-#        - python : 'twisted'
-#        - python : 'starpy'
-#        - asterisk : 'app_confbridge'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_confbridge'
+        - asterisk : 'app_playback'
 #        - asterisk : 'app_senddtmf'
-#        - asterisk : 'app_playback'
 #        - asterisk : 'chan_sip'
 
 test-modules:
@@ -25,26 +25,40 @@ test-modules:
         typename: 'apptest.AppTest'
 
 test-object-config:
-  app: 'ConfBridge'
+  app: 'BLAStation'
   scenarios:
     -
+      # This scenario simply originates a call on the BLAStation() application
+      # and checks that a ConfBridge conference was created.
       events:
         -
           type: 'headermatch'
           conditions:
             match:
-              Event: 'BLARinging'
-              Trunk: 'line1'
+              Event: 'ConfbridgeStart'
+              Conference: 'BLA_line1'
           actions:
             -
               action-type: 'set-expected-result'
-              expected-result: 'BLA Trunk line1 Ringing'
+              expected-result: 'BLA_line1 Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: 'BLA_line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
       channels:
         -
-          channel-id: 'Incoming'
-          channel-name: 'Local/incoming@BLA'
-          context: 'line1'
-          exten: 'inbound'
+          channel-id: 'station1'
+          channel-name: 'Local/station1@bla_stations'
+          context: 'default'
+          exten: 'wait'
           start-on-create: True
           events:
             -
@@ -52,54 +66,24 @@ test-object-config:
               conditions:
                 match:
                   Event: 'ConfbridgeJoin'
-                  Conference: '1'
-                  Channel: 'Local/incoming@BLA'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/station1@bla_stations-.*'
               actions:
                 -
                   action-type: 'set-expected-result'
-                  expected-result: 'Incoming Join Event received'
+                  expected-result: 'station1 Join Event received'
                 -
                   action-type: 'hangup'
                   delay: 2
-                  channel-id: 'Marked'
+                  channel-id: 'station1'
             -
               type: 'headermatch'
               conditions:
                 match:
                   Event: 'ConfbridgeLeave'
-                  Conference: '1'
-                  Channel: 'Local/incoming@BLA'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/station1@bla_stations-.*'
               actions:
                 -
                   action-type: 'set-expected-result'
-                  expected-result: 'Incoming Leave Event received'
-        -
-          channel-id: 'Station'
-          channel-name: 'Local/station1@BLA'
-          context: 'bla_stations'
-          exten: 'station1'
-#          start-on-create: False
-          events:
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'Newstate'
-                  Channel: 'Local/station1@BLA'
-                  ChannelStateDesc: 'Ringing'
-            - type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'BLARinging'
-                  Trunk: 'line1'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'ConfbridgeJoin'
-                  Conference: '1'
-                  Channel: 'Local/waitmarked@confbridge-.*'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'WaitMarked-1 Join Event received'
+                  expected-result: 'station1 Leave Event received'
