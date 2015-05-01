@@ -25,8 +25,55 @@ test-object-config:
   app: 'BLATrunk'
   scenarios:
     -
-      events: []
-        # TODO: add events here
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: 'BLA_line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line1'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 conference transitioned from EMPTY to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line1'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'MULTI'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 conference transitioned from SINGLE to MULTI'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: 'BLA_line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'line1'
@@ -34,5 +81,30 @@ test-object-config:
           context: 'default'
           exten: 'wait'
           start-on-create: True
-          events: []
-            # TODO: add event for line1 ringing
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/inbound@line1-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'line1 Join Event received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'line1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/inbound@line1-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'line1 Leave Event received'
