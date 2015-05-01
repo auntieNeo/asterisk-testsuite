@@ -1,8 +1,8 @@
 testinfo:
-    summary: 'Test stations ringing when a trunk dials in'
+    summary: 'Test basic functionality of BLAStation'
     description: |
-        This tests the behavior of ConfBridge BLA when a call comes in on one
-        of the trunks. 
+        This tests the behavior of ConfBridge BLA when stations call out to the
+        trunks.
 
 properties:
     minversion: '14.0.0'
@@ -15,9 +15,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'app_confbridge'
-        - asterisk : 'app_playback'
-#        - asterisk : 'app_senddtmf'
-#        - asterisk : 'chan_sip'
 
 test-modules:
     test-object:
@@ -114,6 +111,184 @@ test-object-config:
                   action-type: 'set-expected-result'
                   expected-result: 'station1 Leave Event received'
     -
+      # Scenario 2:
+      # This scenario tests multiple stations connecting to different lines.
+      #
+      # First, station1 dials out on line1 and joins the BLA_line1 conference.
+      #
+      # Once station1 has joined the BLA_line1 conference, station2 dials out
+      # on line2 and joins the BLA_line2 conference.
+      #
+      # After station2 joins the BLA_line2 conference, station1 hangs up,
+      # followed by station2. The BLA_line1 and BLA_line2 conferences end in
+      # that order.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: 'BLA_line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line1'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 conference transitioned from EMPTY to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line1'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'MULTI'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 conference transitioned from SINGLE to MULTI'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: 'BLA_line2'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line2 Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line2'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line2 conference transitioned from EMPTY to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line2'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'MULTI'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line2 conference transitioned from SINGLE to MULTI'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: 'BLA_line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 Conference Ended'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: 'BLA_line2'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line2 Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'station1'
+          channel-name: 'Local/station1_line1@bla_stations'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/station1_line1@bla_stations-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'station1 Join Event received'
+                -
+                  action-type: 'start-call'
+                  delay: 3
+                  channel-id: 'station2'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/station1_line1@bla_stations-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'station1 Leave Event received'
+        -
+          channel-id: 'station2'
+          channel-name: 'Local/station2_line2@bla_stations'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: False
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: 'BLA_line2'
+                  Channel: 'Local/station2_line2@bla_stations-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'station2 Join Event received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'station1'
+                -
+                  action-type: 'hangup'
+                  delay: 4
+                  channel-id: 'station2'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: 'BLA_line2'
+                  Channel: 'Local/station2_line2@bla_stations-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'station2 Leave Event received'
+    -
       # Scenario 3:
       # This scenario tests multiple stations connecting to the same line.
       #
@@ -121,10 +296,10 @@ test-object-config:
       #
       # Once station1 has joined the BLA_line1 conference, station2 dials out
       # on the same line. This time, the extension station2_line1 is used;
-      # otherwise station2 would connect to line2 as in Scenario 2.
+      # otherwise station2 would dial line2 as in Scenario 2.
       #
       # After station2 joins the BLA_line1 conference, all stations hang up and
-      # the conference is ended.
+      # the conference ends.
       events:
         -
           type: 'headermatch'
@@ -187,6 +362,7 @@ test-object-config:
                   Event: 'ConfbridgeJoin'
                   Conference: 'BLA_line1'
                   Channel: 'Local/station1@bla_stations-.*'
+                  # TODO: add event for line1_outbound joining the conference
               actions:
                 -
                   action-type: 'set-expected-result'

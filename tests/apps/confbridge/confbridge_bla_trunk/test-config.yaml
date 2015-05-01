@@ -1,0 +1,38 @@
+testinfo:
+    summary: 'Test stations ringing when a trunk dials in'
+    description: |
+        This tests the behavior of ConfBridge BLA when a call comes in on one
+        of the trunks. 
+
+properties:
+    minversion: '14.0.0'
+    tags:
+        - BLA
+        - confbridge
+        - apps
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_confbridge'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'BLATrunk'
+  scenarios:
+    -
+      events: []
+        # TODO: add events here
+      channels:
+        -
+          channel-id: 'line1'
+          channel-name: 'Local/inbound@line1'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events: []
+            # TODO: add event for line1 ringing
