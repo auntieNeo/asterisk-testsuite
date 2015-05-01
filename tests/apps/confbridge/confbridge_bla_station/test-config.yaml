@@ -68,6 +68,28 @@ test-object-config:
           type: 'headermatch'
           conditions:
             match:
+              Event: 'ConfbridgeJoin'
+              Conference: 'BLA_line1'
+              Channel: 'Local/faux@line1_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line1 Join Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeLeave'
+              Conference: 'BLA_line1'
+              Channel: 'Local/faux@line1_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line1 Leave Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
               Event: 'ConfbridgeEnd'
               Conference: 'BLA_line1'
           actions:
@@ -163,6 +185,28 @@ test-object-config:
           type: 'headermatch'
           conditions:
             match:
+              Event: 'ConfbridgeJoin'
+              Conference: 'BLA_line1'
+              Channel: 'Local/faux@line1_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line1 Join Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeLeave'
+              Conference: 'BLA_line1'
+              Channel: 'Local/faux@line1_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line1 Leave Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
               Event: 'ConfbridgeStart'
               Conference: 'BLA_line2'
           actions:
@@ -195,6 +239,28 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'BLA_line2 conference transitioned from SINGLE to MULTI'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeJoin'
+              Conference: 'BLA_line2'
+              Channel: 'Local/faux@line2_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line2 Join Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeLeave'
+              Conference: 'BLA_line2'
+              Channel: 'Local/faux@line2_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line2 Leave Event received'
         -
           type: 'headermatch'
           conditions:
@@ -335,6 +401,28 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Conference transitioned from SINGLE to MULTI'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeJoin'
+              Conference: 'BLA_line1'
+              Channel: 'Local/faux@line1_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line1 Join Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeLeave'
+              Conference: 'BLA_line1'
+              Channel: 'Local/faux@line1_outbound-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'line1 Leave Event received'
         -
           type: 'headermatch'
           conditions:

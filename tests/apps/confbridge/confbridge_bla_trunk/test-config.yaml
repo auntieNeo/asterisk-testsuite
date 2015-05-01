@@ -66,6 +66,28 @@ test-object-config:
           type: 'headermatch'
           conditions:
             match:
+              Event: 'ConfbridgeJoin'
+              Conference: 'BLA_line1'
+              Channel: 'Local/test@station1-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'station1 Join Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeLeave'
+              Conference: 'BLA_line1'
+              Channel: 'Local/test@station1-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'station1 Leave Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
               Event: 'ConfbridgeEnd'
               Conference: 'BLA_line1'
           actions:
