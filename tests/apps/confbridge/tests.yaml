@@ -15,4 +15,5 @@ tests:
     - test: 'confbridge_end_marked'
     - test: 'confbridge_bla_station'
     - test: 'confbridge_bla_trunk'
+    - test: 'confbridge_bla_autocontext'
 
