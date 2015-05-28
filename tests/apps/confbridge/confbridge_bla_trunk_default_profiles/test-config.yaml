@@ -1,0 +1,284 @@
+---
+
+testinfo:
+    summary: 'Test of BLAStation() default profiles'
+    description: |
+        This tests that the default ConfBridge profiles that BLA uses are
+        working properly. This involves testing that options such as quiet and
+        DTMF passthrough are working for BLA stations and trunks. This test is
+        nearly identical to the confbridge_bla_station_default_profiles test,
+        except this test uses the BLATrunk() application rather than the
+        BLAStation() application. Both tests are necessary because BLATrunk()
+        and BLAStation() use different code paths.
+
+properties:
+    minversion: '14.0.0'
+    tags:
+        - BLA
+        - confbridge
+        - apps
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_confbridge'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'BLAStation'
+  scenarios:
+    -
+      # Scenario 1:
+      # This scenario originates a simple BLA call from line1 to station1. The
+      # scenario asserts that no conference join sounds are played. A quiet
+      # conference is the correct behavior for the default BLA profiles.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: 'BLA_line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'PLAYBACK'
+          actions:
+            -
+              action-type: 'fail-test'
+              message: 'BLA conference should be quiet, but PLAYBACK event occurred'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line1'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 conference transitioned from EMPTY to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              Conference: 'BLA_line1'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'MULTI'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA_line1 conference transitioned from SINGLE to MULTI'
+# FIXME: For some reason, the station channel connects as Local/inbound@line1. I'm not sure if this is bug or just how it works.
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'ConfbridgeJoin'
+#              Conference: 'BLA_line1'
+#              Channel: 'Local/test@station1-.*'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'station1 Join Event received'
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'ConfbridgeLeave'
+#              Conference: 'BLA_line1'
+#              Channel: 'Local/test@station1-.*'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'station1 Leave Event received'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: 'BLA_line1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'line1'
+          channel-name: 'Local/inbound@line1'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/inbound@line1-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'line1 Join Event received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'line1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: 'BLA_line1'
+                  Channel: 'Local/inbound@line1-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'line1 Leave Event received'
+#    -
+#      # Scenario 2:
+#      # This scenario originates a simple BLA call from line1 to station2. The
+#      # station sends a DTMF signal, 12345, to the line. If the default BLA
+#      # profile is working correctly, then the DTMF will reach the other side
+#      # which will echo the digits. The test passes when the station receives
+#      # those same digits.
+#      events:
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'ConfbridgeStart'
+#              Conference: 'BLA_line2'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'BLA_line2 Conference Started'
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'TestEvent'
+#              Conference: 'BLA_line2'
+#              State: 'CONF_CHANGE_STATE'
+#              OldState: 'EMPTY'
+#              NewState: 'SINGLE'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'BLA_line2 conference transitioned from EMPTY to SINGLE'
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'TestEvent'
+#              Conference: 'BLA_line2'
+#              State: 'CONF_CHANGE_STATE'
+#              OldState: 'SINGLE'
+#              NewState: 'MULTI'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'BLA_line2 conference transitioned from SINGLE to MULTI'
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'ConfbridgeJoin'
+#              Conference: 'BLA_line2'
+#              Channel: 'Local/faux@line2_outbound-.*'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'line2 Join Event received'
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'ConfbridgeLeave'
+#              Conference: 'BLA_line2'
+#              Channel: 'Local/faux@line2_outbound-.*'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'line2 Leave Event received'
+#        -
+#          type: 'headermatch'
+#          conditions:
+#            match:
+#              Event: 'ConfbridgeEnd'
+#              Conference: 'BLA_line2'
+#          actions:
+#            -
+#              action-type: 'set-expected-result'
+#              expected-result: 'Conference Ended'
+#            -
+#              action-type: 'end-scenario'
+#      channels:
+#        -
+#          channel-id: 'station1'
+#          channel-name: 'Local/station1_line2@bla_stations'
+#          context: 'default'
+#          exten: 'wait'
+#          start-on-create: True
+#          events:
+#            -
+#              type: 'headermatch'
+#              conditions:
+#                match:
+#                  Event: 'ConfbridgeJoin'
+#                  Conference: 'BLA_line2'
+#                  Channel: 'Local/station1_line2@bla_stations-.*'
+#              actions:
+#                -
+#                  action-type: 'set-expected-result'
+#                  expected-result: 'station1 Join Event received'
+#                -
+#                  action-type: 'send-dtmf'
+#                  delay: 2
+#                  dtmf: '12345'
+#            -
+#              type: 'headermatch'
+#              conditions:
+#                match:
+#                  Event: 'Newexten'
+#                  Channel: 'Local/station1_line2@bla_stations-.*'
+#                  Context: 'default'
+#                  Extension: 'readDTMF'
+#                  Application: 'Verbose'
+#                  AppData: 'Got DTMF Response: 12345'
+#              actions:
+#                -
+#                  action-type: 'set-expected-result'
+#                  expected-result: 'station1 received DTMF response: 12345'
+#                -
+#                  action-type: 'hangup'
+#                  delay: 2
+#                  channel-id: 'station1'
+#            -
+#              type: 'headermatch'
+#              conditions:
+#                match:
+#                  Event: 'ConfbridgeLeave'
+#                  Conference: 'BLA_line2'
+#                  Channel: 'Local/station1_line2@bla_stations-.*'
+#              actions:
+#                -
+#                  action-type: 'set-expected-result'
+#                  expected-result: 'station1 Leave Event received'

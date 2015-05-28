@@ -17,5 +17,6 @@ tests:
     - test: 'confbridge_bla_trunk'
     - test: 'confbridge_bla_autocontext'
     - test: 'confbridge_bla_trunk_autocontext'
-    - test: 'confbridge_bla_default_profiles'
+    - test: 'confbridge_bla_station_default_profiles'
+    - test: 'confbridge_bla_trunk_default_profiles'
 

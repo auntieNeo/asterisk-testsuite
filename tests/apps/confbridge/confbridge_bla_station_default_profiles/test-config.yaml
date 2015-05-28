@@ -1,11 +1,15 @@
 ---
 
 testinfo:
-    summary: 'Test of BLA conference profiles'
+    summary: 'Test of BLAStation() default profiles'
     description: |
         This tests that the default ConfBridge profiles that BLA uses are
         working properly. This involves testing that options such as quiet and
-        DTMF passthrough are working for BLA stations and trunks.
+        DTMF passthrough are working for BLA stations and trunks. This test is
+        nearly identical to the confbridge_bla_trunk_default_profiles test,
+        except this test uses the BLAStation() application rather than the
+        BLATrunk() application. Both tests are necessary because BLAStation()
+        and BLATrunk() use different code paths.
 
 properties:
     minversion: '14.0.0'
@@ -152,7 +156,8 @@ test-object-config:
       # This scenario originates a simple BLA call from station1 on line2. The
       # station sends a DTMF signal, 12345, to the line. If the default BLA
       # profile is working correctly, then the DTMF will reach the other side
-      # which will echo the digits.
+      # which will echo the digits. The test passes when the station receives
+      # those same digits.
       events:
         -
           type: 'headermatch'
