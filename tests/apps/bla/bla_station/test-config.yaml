@@ -1,0 +1,121 @@
+---
+
+testinfo:
+    summary: 'Test basic functionality of BLAStation'
+    description: |
+        This tests the behavior of ConfBridge BLA when stations call out to the
+        trunks.
+properties:
+    minversion: '14.0.0'
+    tags:
+        - BLA
+        - apps
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_confbridge'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'BLAStation'
+  scenarios:
+    -
+      # This scenario simply originates a call on the BLAStation() application
+      # and checks that a bridge was created.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'BridgeCreate'
+              BridgeCreator: 'BLA'
+              BridgeName: 'line1'
+              BridgeNumChannels: '0'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'BLA line1 bridge created'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              # NOTE: There is no telling who enters the bridge first; it is a
+              # race between station and trunk threads.
+              Event: 'BridgeEnter'
+              BridgeCreator: 'BLA'
+              BridgeName: 'line1'
+              BridgeNumChannels: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'First channel entered line1 bridge'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              # NOTE: There is no telling who enters the bridge first; it is a
+              # race between station and trunk threads.
+              Event: 'BridgeEnter'
+              BridgeCreator: 'BLA'
+              BridgeName: 'line1'
+              BridgeNumChannels: '2'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Second channel entered line1 bridge'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'BridgeLeave'
+              BridgeCreator: 'BLA'
+              BridgeName: 'line1'
+              BridgeNumChannels: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'One channel left line1 bridge'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'BridgeLeave'
+              BridgeCreator: 'BLA'
+              BridgeName: 'line1'
+              BridgeNumChannels: '0'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Both channels left line1 bridge'
+            -
+              action-type: 'end-scenario'
+# TODO: Actually close the bridge
+      channels:
+        -
+          channel-id: 'station1'
+          channel-name: 'Local/station1@bla_stations'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeCreator: 'BLA'
+                  BridgeName: 'line1'
+                  Channel: 'Local/station1@bla_stations-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'station1 entered line1 bridge'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'station1'
